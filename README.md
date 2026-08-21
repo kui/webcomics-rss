@@ -14,6 +14,14 @@ bun install
 bun run dev
 ```
 
+bun は型チェックを行わないため、変更後は `tsc` で別途検査する。整形と静的解析は Biome。
+
+```sh
+bun run typecheck  # tsc --noEmit
+bun run lint       # フォーマット検査 + 静的解析
+bun run format     # 自動整形
+```
+
 ## 抽出の疎通確認
 
 webcomics.jp の HTML 構造が変わると抽出が壊れるため、実ページを取得してパース結果を検証する。

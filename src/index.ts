@@ -125,7 +125,12 @@ export default {
       return feedResponse(
         request.url,
         now,
-        [alertItem(now, `記事を 1 件も抽出できませんでした（entry ブロック ${blockCount} 件、HTML ${html.length} バイト）。webcomics.jp の HTML 構造が変わった可能性があります。`)],
+        [
+          alertItem(
+            now,
+            `記事を 1 件も抽出できませんでした（entry ブロック ${blockCount} 件、HTML ${html.length} バイト）。webcomics.jp の HTML 構造が変わった可能性があります。`,
+          ),
+        ],
         false,
       );
     }
@@ -135,7 +140,10 @@ export default {
         `degraded extraction: blocks=${blockCount} items=${items.length} skipped=${JSON.stringify(skipped.slice(0, 10))}`,
       );
       rssItems.unshift(
-        alertItem(now, `${blockCount} 件中 ${items.length} 件しか抽出できませんでした。失敗理由: ${summarizeSkipped(skipped)}`),
+        alertItem(
+          now,
+          `${blockCount} 件中 ${items.length} 件しか抽出できませんでした。失敗理由: ${summarizeSkipped(skipped)}`,
+        ),
       );
       return feedResponse(request.url, now, rssItems, false);
     }
