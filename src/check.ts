@@ -14,7 +14,7 @@ const { items, blockCount, skipped } = await parseRanking(html);
 
 console.log(`blocks=${blockCount} items=${items.length} skipped=${skipped.length}`);
 for (const s of skipped) console.log(`  skipped ${s.comicId}: ${s.reason}`);
-if (items[0]) console.log(`  first: #${items[0].rank} ${items[0].title} -> ${items[0].detailUrl}`);
+if (items[0]) console.log(`  first: ${items[0].title} -> ${items[0].detailUrl}`);
 
 if (items.length < MIN_ITEMS) {
   throw new Error(
