@@ -19,9 +19,9 @@
 ```sh
 bun install        # 依存のインストール
 bun run dev        # wrangler のローカル開発サーバ
-bun run typecheck  # tsc --noEmit による型チェック
-bun run lint       # Biome によるフォーマット検査 + 静的解析
-bun run format     # Biome による自動整形
+bun run typecheck  # bun check による型チェック
+bun run lint       # bun fmt によるフォーマット検査 + Biome による静的解析
+bun run format     # bun fmt による自動整形
 bun run check      # webcomics.jp を実際に取得して抽出結果を検証
 bun run deploy     # Cloudflare へデプロイ
 ```
@@ -30,8 +30,10 @@ bun run deploy     # Cloudflare へデプロイ
 
 ## 変更前に知っておくこと
 
-- **bun は型チェックをしない。** TypeScript の型を捨ててトランスパイルするだけなので、`bun run` が通っても型エラーは残り得る。変更後は必ず `bun run typecheck` を実行する。
-- CI（`.github/workflows/ci.yml`）は `jdx/mise-action` で `mise.toml` どおりのツールを入れてから `biome ci` と `bun run typecheck` を実行する。手元と CI でツールのバージョン指定元が `mise.toml` に一本化されている。push する前に手元で `bun run lint` と `bun run typecheck` を通しておく。
+- **`bun run` は型チェックをしない。** TypeScript の型を捨ててトランスパイルするだけなので、`bun run` が通っても型エラーは残り得る。変更後は必ず `bun run typecheck` を実行する。
+- **`bun check` と打つと型チェックではなく `check` スクリプト（疎通確認）が走る。** bun は組み込みコマンドより同名の `package.json` スクリプトを優先する。組み込みの型チェックは `bun run typecheck`（中身は `bun check --no-script`）で呼ぶ。
+- 型チェックは bun の組み込みなので `typescript` パッケージは入れていない。
+- CI（`.github/workflows/ci.yml`）は `jdx/mise-action` で `mise.toml` どおりのツールを入れてから `bun fmt --check`、`biome ci`、`bun run typecheck` を実行する。手元と CI でツールのバージョン指定元が `mise.toml` に一本化されている。push する前に手元で `bun run lint` と `bun run typecheck` を通しておく。
 
 ### tsconfig.json
 
@@ -39,11 +41,25 @@ bun の推奨設定をベースに、bun が既定で無効にしている厳格
 
 推奨設定から意図的に外している点が 1 つある。`types` は `["bun"]` ではなく `["@cloudflare/workers-types"]` にしている。デプロイ先は Workers であり、両方を同時に読み込むと `fetch` や `Response` などのグローバルが衝突するおそれがあるため。bun で動かすのは `src/check.ts` だけで、bun 固有 API は使っていない。必要になった時点で `@types/bun` の追加を再検討する。
 
+### bunfig.toml
+
+`[fmt]` が `bun fmt` の整形設定。書式は `bun fmt` のデフォルト（Prettier 相当）のままにする。デフォルトから変えているのは import の並べ替え（`sortImports`）だけで、既定では無効なので有効にしてある。整形対象は `.gitignore` に載っていない全ファイルで、Markdown・YAML・TOML も含む。
+
+### .git-blame-ignore-revs
+
+整形だけのコミットを `git blame` から外すための一覧。GitHub の blame 表示は自動でこのファイルを読む。手元では次の設定を 1 度だけ行う。
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+一括整形をしたら、そのコミットの SHA をここに足す。SHA が変わると効かなくなるため、整形コミットを含む PR はスカッシュやリベースではなくマージコミットで取り込む。
+
 ### biome.json
 
-lint ルールは `preset: "recommended"`。整形はスペース 2、シングルクォート、1 行 100 文字。整形対象は `src/**` とルートの `*.json`（`bun.lock` は除外）。
+Biome は静的解析だけに使う。bun に組み込みの lint がまだないため。整形と import の並べ替えは `bun fmt` と二重にならないよう無効にしてある。lint ルールは `preset: "recommended"`、対象は `src/**`。
 
-`bun run lint`（`biome check`）は静的解析だけでなく整形崩れも検出する。CI では `--write` を持たない `biome ci` を使い、ファイルを書き換えられない形で同じ検査をかけている。`--reporter=github` により指摘は PR の該当行に注釈として表示される。
+`bun run lint` は整形崩れ（`bun fmt --check`）と静的解析（`biome lint`）の両方を検出する。CI の `biome ci` は `--reporter=github` により、指摘を PR の該当行に注釈として表示する。`bun fmt --check` は整形が崩れたファイル名を出すだけで、行注釈は出ない。
 
 ## コメントの書き方
 
