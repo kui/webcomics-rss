@@ -43,7 +43,7 @@ bun の推奨設定をベースに、bun が既定で無効にしている厳格
 
 ### bunfig.toml
 
-`[fmt]` が `bun fmt` の整形設定。スペース 2、シングルクォート、1 行 100 文字で、import の並べ替えも行う。整形対象は `.gitignore` に載っていない全ファイルで、Markdown・YAML・TOML も含む。
+`[fmt]` が `bun fmt` の整形設定。書式は `bun fmt` のデフォルト（Prettier 相当）のままにする。デフォルトから変えているのは import の並べ替え（`sortImports`）だけで、既定では無効なので有効にしてある。整形対象は `.gitignore` に載っていない全ファイルで、Markdown・YAML・TOML も含む。
 
 ### biome.json
 

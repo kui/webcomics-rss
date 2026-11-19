@@ -1,5 +1,2 @@
 [fmt]
-printWidth = 100
-singleQuote = true
-arrowParens = "avoid"
 sortImports = true
