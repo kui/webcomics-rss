@@ -13,7 +13,7 @@ export interface ParseResult {
   skipped: { comicId: string; reason: string }[];
 }
 
-const SOURCE_URL = 'https://webcomics.jp/ranking/new-recent';
+const SOURCE_URL = "https://webcomics.jp/ranking/new-recent";
 
 interface Draft {
   comicId: string;
@@ -25,7 +25,14 @@ interface Draft {
 }
 
 function newDraft(): Draft {
-  return { comicId: '', thumbUrl: '', detailUrl: '', title: '', dateText: '', desc: '' };
+  return {
+    comicId: "",
+    thumbUrl: "",
+    detailUrl: "",
+    title: "",
+    dateText: "",
+    desc: "",
+  };
 }
 
 export async function parseRanking(html: string): Promise<ParseResult> {
@@ -35,32 +42,32 @@ export async function parseRanking(html: string): Promise<ParseResult> {
   let draft: Draft | null = null;
 
   const missingField = (d: Draft): string | null => {
-    if (!d.comicId) return 'comic-no';
-    if (!d.thumbUrl) return 'thumb';
-    if (!d.title.trim()) return 'title';
-    if (!d.detailUrl) return 'detail-url';
+    if (!d.comicId) return "comic-no";
+    if (!d.thumbUrl) return "thumb";
+    if (!d.title.trim()) return "title";
+    if (!d.detailUrl) return "detail-url";
     return null;
   };
 
-  const appendTo = (field: 'title' | 'dateText' | 'desc') => ({
+  const appendTo = (field: "title" | "dateText" | "desc") => ({
     text(chunk: Text) {
       if (draft) draft[field] += chunk.text;
     },
   });
 
   await new HTMLRewriter()
-    .on('div.entry', {
+    .on("div.entry", {
       element(el) {
         blockCount++;
         draft = newDraft();
-        draft.comicId = el.getAttribute('data-comic-no') ?? '';
+        draft.comicId = el.getAttribute("data-comic-no") ?? "";
         el.onEndTag(() => {
           const d = draft;
           draft = null;
           if (!d) return;
           const missing = missingField(d);
           if (missing) {
-            skipped.push({ comicId: d.comicId || '?', reason: missing });
+            skipped.push({ comicId: d.comicId || "?", reason: missing });
             return;
           }
           items.push({
@@ -68,23 +75,23 @@ export async function parseRanking(html: string): Promise<ParseResult> {
             thumbUrl: d.thumbUrl,
             detailUrl: d.detailUrl,
             desc: decodeEntities(d.desc).trim(),
-            rank: d.dateText.match(/#(\d+)/)?.[1] ?? '?',
+            rank: d.dateText.match(/#(\d+)/)?.[1] ?? "?",
             comicId: d.comicId,
           });
         });
       },
     })
-    .on('div.entry-thumb img', {
+    .on("div.entry-thumb img", {
       element(el) {
-        if (draft) draft.thumbUrl = el.getAttribute('src') ?? '';
+        if (draft) draft.thumbUrl = el.getAttribute("src") ?? "";
       },
     })
-    .on('div.entry-title a', appendTo('title'))
-    .on('div.entry-date', appendTo('dateText'))
-    .on('div.entry-summary', appendTo('desc'))
-    .on('span.entry-detail a', {
+    .on("div.entry-title a", appendTo("title"))
+    .on("div.entry-date", appendTo("dateText"))
+    .on("div.entry-summary", appendTo("desc"))
+    .on("span.entry-detail a", {
       element(el) {
-        if (draft) draft.detailUrl = el.getAttribute('href') ?? '';
+        if (draft) draft.detailUrl = el.getAttribute("href") ?? "";
       },
     })
     .transform(new Response(html))
@@ -100,7 +107,7 @@ export default {
     const now = new Date();
     const res = await fetch(SOURCE_URL, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; RSSBot/1.0)',
+        "User-Agent": "Mozilla/5.0 (compatible; RSSBot/1.0)",
       },
     });
 
@@ -116,7 +123,7 @@ export default {
 
     const html = await res.text();
     const { items, blockCount, skipped } = await parseRanking(html);
-    const rssItems = items.map(item => renderItem(item));
+    const rssItems = items.map((item) => renderItem(item));
 
     if (items.length === 0) {
       console.error(
@@ -194,15 +201,25 @@ function alertItem(now: Date, detail: string): string {
 
 function summarizeSkipped(skipped: { reason: string }[]): string {
   const counts = new Map<string, number>();
-  for (const s of skipped) counts.set(s.reason, (counts.get(s.reason) ?? 0) + 1);
-  return [...counts].map(([reason, count]) => `${reason} ${count} 件`).join(', ');
+  for (const s of skipped)
+    counts.set(s.reason, (counts.get(s.reason) ?? 0) + 1);
+  return [...counts]
+    .map(([reason, count]) => `${reason} ${count} 件`)
+    .join(", ");
 }
 
 export function jstDay(now: Date): string {
-  return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return new Date(now.getTime() + 9 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
 }
 
-function feedResponse(selfUrl: string, now: Date, rssItems: string[], healthy: boolean): Response {
+function feedResponse(
+  selfUrl: string,
+  now: Date,
+  rssItems: string[],
+  healthy: boolean,
+): Response {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
   xmlns:media="http://search.yahoo.com/mrss/"
@@ -214,14 +231,14 @@ function feedResponse(selfUrl: string, now: Date, rssItems: string[], healthy: b
     <language>ja</language>
     <lastBuildDate>${now.toUTCString()}</lastBuildDate>
     <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml"/>
-${rssItems.join('\n')}
+${rssItems.join("\n")}
   </channel>
 </rss>`;
 
   return new Response(rss, {
     headers: {
-      'Content-Type': 'application/rss+xml; charset=utf-8',
-      'Cache-Control': healthy ? 'public, max-age=3600' : 'no-store',
+      "Content-Type": "application/rss+xml; charset=utf-8",
+      "Cache-Control": healthy ? "public, max-age=3600" : "no-store",
     },
   });
 }
@@ -229,20 +246,20 @@ ${rssItems.join('\n')}
 // HTMLRewriter の text チャンクはエンティティを解決せずに渡してくる
 function decodeEntities(str: string): string {
   return str
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&');
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
 }
 
 function escapeXml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
