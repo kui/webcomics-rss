@@ -14,10 +14,10 @@ bun install
 bun run dev
 ```
 
-bun は型チェックを行わないため、変更後は `tsc` で別途検査する。整形と静的解析は Biome。
+`bun run` は型チェックをせずに実行するため、変更後は別途検査する。型チェックと整形は bun、静的解析は Biome。
 
 ```sh
-bun run typecheck  # tsc --noEmit
+bun run typecheck  # 型チェック
 bun run lint       # フォーマット検査 + 静的解析
 bun run format     # 自動整形
 ```
