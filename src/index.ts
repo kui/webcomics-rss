@@ -3,7 +3,6 @@ interface ComicItem {
   thumbUrl: string;
   detailUrl: string;
   desc: string;
-  rank: string;
   comicId: string;
 }
 
@@ -20,19 +19,11 @@ interface Draft {
   thumbUrl: string;
   detailUrl: string;
   title: string;
-  dateText: string;
   desc: string;
 }
 
 function newDraft(): Draft {
-  return {
-    comicId: "",
-    thumbUrl: "",
-    detailUrl: "",
-    title: "",
-    dateText: "",
-    desc: "",
-  };
+  return { comicId: "", thumbUrl: "", detailUrl: "", title: "", desc: "" };
 }
 
 export async function parseRanking(html: string): Promise<ParseResult> {
@@ -49,7 +40,7 @@ export async function parseRanking(html: string): Promise<ParseResult> {
     return null;
   };
 
-  const appendTo = (field: "title" | "dateText" | "desc") => ({
+  const appendTo = (field: "title" | "desc") => ({
     text(chunk: Text) {
       if (draft) draft[field] += chunk.text;
     },
@@ -75,7 +66,6 @@ export async function parseRanking(html: string): Promise<ParseResult> {
             thumbUrl: d.thumbUrl,
             detailUrl: d.detailUrl,
             desc: decodeEntities(d.desc).trim(),
-            rank: d.dateText.match(/#(\d+)/)?.[1] ?? "?",
             comicId: d.comicId,
           });
         });
@@ -87,7 +77,6 @@ export async function parseRanking(html: string): Promise<ParseResult> {
       },
     })
     .on("div.entry-title a", appendTo("title"))
-    .on("div.entry-date", appendTo("dateText"))
     .on("div.entry-summary", appendTo("desc"))
     .on("span.entry-detail a", {
       element(el) {
@@ -170,7 +159,7 @@ export default {
 function renderItem(item: ComicItem): string {
   return `
     <item>
-      <title>#${item.rank} ${escapeXml(item.title)}</title>
+      <title>${escapeXml(item.title)}</title>
       <link>${escapeXml(item.detailUrl)}</link>
       <guid isPermaLink="false">webcomics-new-${item.comicId}</guid>
       <description><![CDATA[
