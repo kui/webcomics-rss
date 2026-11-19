@@ -45,6 +45,16 @@ bun の推奨設定をベースに、bun が既定で無効にしている厳格
 
 `[fmt]` が `bun fmt` の整形設定。書式は `bun fmt` のデフォルト（Prettier 相当）のままにする。デフォルトから変えているのは import の並べ替え（`sortImports`）だけで、既定では無効なので有効にしてある。整形対象は `.gitignore` に載っていない全ファイルで、Markdown・YAML・TOML も含む。
 
+### .git-blame-ignore-revs
+
+整形だけのコミットを `git blame` から外すための一覧。GitHub の blame 表示は自動でこのファイルを読む。手元では次の設定を 1 度だけ行う。
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+一括整形をしたら、そのコミットの SHA をここに足す。SHA が変わると効かなくなるため、整形コミットを含む PR はスカッシュやリベースではなくマージコミットで取り込む。
+
 ### biome.json
 
 Biome は静的解析だけに使う。bun に組み込みの lint がまだないため。整形と import の並べ替えは `bun fmt` と二重にならないよう無効にしてある。lint ルールは `preset: "recommended"`、対象は `src/**`。
